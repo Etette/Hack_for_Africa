@@ -1,0 +1,27 @@
+{
+  "name": "crowdfund",
+  "version": "1.0.0",
+  "description": "SDG gal 17 blockchain solution",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Etette/Hack_for_Africa.git"
+  },
+  "author": "Etette Etok",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Etette/Hack_for_Africa/issues"
+  },
+  "homepage": "https://github.com/Etette/Hack_for_Africa#readme",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^2.0.2",
+    "chai": "^4.3.7",
+    "hardhat": "^2.14.0"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.3"
+  }
+}

@@ -1,0 +1,86 @@
+const { expect } = require("chai");
+//import "../contracts/crowfund.sol";
+
+// describe("crowfund contract", function () {
+//   it("Deploy the smart contract and return the contract address", async function () {
+//     //const [owner] = await ethers.getSigners();
+
+//     const contract = await ethers.getContractFactory("GlobalSDG_Projects");
+//     const deployedContract = await contract.deploy("testing", 5, 5);
+//     console.log("deployed successfully at :",  deployedContract.address)
+//     //console.log(deployedContract);
+
+//     const ownerBalance = await deployedContract.minAmount;
+//     console.log("calling test function");
+//     expect(await ownerBalance.minAmount).to.equal(1);
+//   });
+// });
+
+describe("GlobalSDG_Projects", function () {
+
+  let fundingDescription = "Test Project";
+  let fundingGoal = ethers.utils.parseEther("2"); // 1 ETH
+  let fundingDeadline = Math.floor(Date.now() / 1000) + 600; // 10 minutes from now
+
+  // let owner;
+  // let contributor1;
+  // let contributor2;
+
+  beforeEach(async function () {
+    const [owner, contributor1, contributor2] = await ethers.getSigners();
+
+    const GlobalSDG_Projects = await ethers.getContractFactory("GlobalSDG_Projects");
+    const globalSDG_Projects = await GlobalSDG_Projects.deploy(
+      fundingDescription,
+      fundingGoal,
+      fundingDeadline
+    );
+    //await globalSDG_Projects.deployed();
+    console.log("deployed successfully at ", globalSDG_Projects.address)
+  });
+
+  it("should allow contributors to contribute to the project", async function () {
+    console.log("getting first contribution from ", contributedAmount1.address);
+    await globalSDG_Projects.connect(contributor1).contribute({ value: ethers.utils.parseEther("1.5") });
+    console.log("contributed successfully");
+    console.log("getting second contribution from ", contributedAmount2.address);
+    await globalSDG_Projects.connect(contributor2).contribute({ value: ethers.utils.parseEther("2.6") });
+
+    let contributors = await globalSDG_Projects.getContributors();
+    console.log("all contributors", contributors);
+    expect(contributors.length).to.equal(2);
+
+    // let contributedAmount1 = await globalSDG_Projects.getContributedAmount(contributor1.address);
+    // expect(contributedAmount1).to.equal(ethers.utils.parseEther("2"));
+
+    // let contributedAmount2 = await globalSDG_Projects.getContributedAmount(contributor2.address);
+    // expect(contributedAmount2).to.equal(ethers.utils.parseEther("1.6"));
+
+    let projectStatus = await globalSDG_Projects.getProjectStatus();
+    expect(projectStatus[3]).to.equal(ethers.utils.parseEther("3.1"));
+  });
+
+  // it("should allow contributors to recall their contribution if the funding deadline has passed", async function () {
+  //   await globalSDG_Projects.connect(contributor1).contribute({ value: ethers.utils.parseEther("0.5") });
+
+  //   let contributedAmount1Before = await globalSDG_Projects.getContributedAmount(contributor1.address);
+  //   expect(contributedAmount1Before).to.equal(ethers.utils.parseEther("0.5"));
+
+  //   await ethers.provider.send("evm_increaseTime", [601]); // advance time by 10 minutes
+  //   await ethers.provider.send("evm_mine", []); // mine a new block to process the time increase
+
+  //   await globalSDG_Projects.connect(contributor1).recallContribution();
+
+  //   let contributedAmount1After = await globalSDG_Projects.getContributedAmount(contributor1.address);
+  //   expect(contributedAmount1After).to.equal(0);
+
+  //   let projectStatus = await globalSDG_Projects.getProjectStatus();
+  //   expect(projectStatus[3]).to.equal(0);
+  // });
+
+  // it("should allow contributors to approve project completion", async function () {
+  //   await globalSDG_Projects.connect(contributor1).contribute({ value: ethers.utils.parseEther("0.5") });
+  //   await globalSDG_Projects.connect(contributor2).contribute({ value: ethers.utils.parseEther("0.6") });
+
+  //   await globalSD
+});
