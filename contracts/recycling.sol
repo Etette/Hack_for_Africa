@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Define the smart contract
-contract RecyclingContract {
+contract Impactrensic {
 
     // Define the variables
     address public owner;
@@ -11,7 +11,7 @@ contract RecyclingContract {
     mapping(address => bool) public redeemed;
     uint256 public rewardThreshold = 100;
     uint256 public maxReward = 100;
-    
+
     // Define the exchange rate
     uint256 public exchangeRate;
 
@@ -66,7 +66,7 @@ contract RecyclingContract {
     //     selfdestruct(payable(owner));
     // }
 
-    
+
     // Define the function for exchanging points for ether
     function swapRewardForEther(uint256 swapAmount) public payable {
         require(swapAmount > 0, "reward amount must be greater than 0.");
