@@ -1,15 +1,23 @@
-# Sample Hardhat Project
+Plastics have a wide range of environmental impacts with leakage of macro plastics into the environments.
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
+Reducing these impacts requires a comprehensive set of complementary policy instruments grouped into restraining demand, designing for circularity, enhancing recycling, closing leakage pathways and cleaning up.
 
-Try running some of the following tasks:
+HOW WE AIM TO ACHIEVE THIS:
 
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.js
-```
+- Through the block chain it'll be easy to track the number of recycled products.
 
-gjhhjhg
+- Rewards will be limited to 100 points, so payment won't be too large for company.
+
+- For every 100 bottles , we pay 10 points as reward.
+
+- Exchange rate for a given number of items is set by the parent company.
+
+HOW VALUE IS GENERATED FOR PRODUCTS:
+
+Exchange rate: 120
+Number of bottles to recycle: 100
+Equivalent Reward Point: 10
+100 bottles = 10 points
+
+Amount received = Reward Point / exchange rate.
+Value received = 10÷120 = 0.083 Matic.
