@@ -4,6 +4,9 @@ this repository contains files for "HACKING FOR TRUST" hackathon.
 the project integrates blockchain (polygon) in solving the problem of plastics waste by promoting recycling.
 recyclers utilize a trusted system that can be monitored & evaluated, accountable to get incentives for a given number of items they recycle. 
 
+# video link
+https://www.loom.com/share/925483fd6eef4629ac2da0b63d0bda04
+
 details of the smart contract can be found below.
 ## Polygon
 contract address - 0x0ce4eFC71DEa371709AD30B3Ce02C67cAC1e14A8,
