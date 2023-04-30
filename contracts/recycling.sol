@@ -1,35 +1,47 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.7;
 
 // Define the smart contract
-contract Impactrensic {
+contract RecyclingContract {
 
     // Define the variables
-    address public owner;
-    mapping(address => uint256) public recyclingCounts;
-    mapping(address => uint256) public rewards;
-    mapping(address => bool) public redeemed;
-    uint256 public rewardThreshold = 100;
-    uint256 public maxReward = 100;
-
-    // Define the exchange rate
+    address private owner;
+    mapping(address => uint256) private recyclingCounts;
+    mapping(address => uint256) private rewards;
+    mapping(address => bool) private redeemed;
+    uint256 public recycledItems;
+    uint256 private rewardThreshold = 100;
+    uint256 private maxReward = 100;
     uint256 public exchangeRate;
 
-    // Define the event for recording point swap transactions
-    event rewardsSwapped(address indexed user, uint256 swapAmount, uint256 etherAmount);
+    // define events for when item is recycled
+    event itemsRecycled(address indexed recycler, uint256 total_items);
 
-    // Define the events
+    // Define the event for when rewards are swapped for Matic
+    event rewardsSwapped(address indexed user, uint256 swapAmount, uint256 MaticAmount);
+
+    // Define the events when rewards are redeemed
     event RewardRedeemed(address indexed user, uint256 rewardAmount);
 
-    // Define the constructor function
     constructor() {
         owner = msg.sender;
     }
 
-    // Define the function for recycling items
+    modifier onlyOwner {
+        require(msg.sender == owner);
+        _;
+    }
+
+    /*
+    * @dev: recycle items at collection centres.
+    *       only 50 items can be recycled at a time
+    *       when items recycled is equal to 200, reward recycler 20 points
+    * @param: number of items counted and recieved for recycling
+    */
     function recycleItems(uint256 itemCount) public {
-        require(itemCount > 0 && itemCount <= 10, "You must recycle between 1 and 10 items.");
-        require(!redeemed[msg.sender], "You have already redeemed your rewards.");
+        // items are recycled in batch of 50 at a time
+        require(itemCount > 0 && itemCount <= 50, "50 per batch");
+        require(!redeemed[msg.sender], "already redeemed rewards.");
 
         // Check for potential integer overflow
         require(recyclingCounts[msg.sender] + itemCount >= recyclingCounts[msg.sender], "Integer overflow error.");
@@ -40,76 +52,109 @@ contract Impactrensic {
         // If the user has recycled enough items, award them tokens
         if (recyclingCounts[msg.sender] >= rewardThreshold) {
             uint256 rewardAmount = 10;
-            require(rewards[msg.sender] + rewardAmount <= maxReward, "You have reached the maximum reward amount.");
+            // validate recycler does not exceed max reward to redeem
+            require(rewards[msg.sender] + rewardAmount <= maxReward, "max reward amount exceeded");
             rewards[msg.sender] += rewardAmount;
             recyclingCounts[msg.sender] -= rewardThreshold;
         }
+        recycledItems += itemCount;
+        emit itemsRecycled(msg.sender, itemCount);
     }
 
-    // Define the function for redeeming rewards
-    function redeemRewards() public {
-        require(rewards[msg.sender] > 0 && !redeemed[msg.sender], "You have no rewards to redeem or have already redeemed your rewards.");
+    /*
+    * @dev: redeem all available rewards
+    */
+    function redeemRewards() public payable {
+        // validate recycler has rewards to redeem and check for re-entrancy
+        require(rewards[msg.sender] > 0 && !redeemed[msg.sender], "null rewards or already redeemed");
+
+        // Calculate the amount of Matic to transfer
+        uint256 amountToRecieve = rewards[msg.sender] / exchangeRate;
+        // check smart contract has enough funds to send to recycler
+        require(msg.value >= amountToRecieve, "Insufficient Matic ");
 
         // Prevent reentrancy attacks
         redeemed[msg.sender] = true;
 
         // Transfer the rewards to the user
-        uint256 rewardAmount = rewards[msg.sender];
         rewards[msg.sender] = 0;
-        emit RewardRedeemed(msg.sender, rewardAmount);
-        payable(msg.sender).transfer(rewardAmount);
+        // Transfer the Matic to the user's wallet
+        (bool success,) = payable(msg.sender).call{value: amountToRecieve}("");
+        require(success, "not sent.");
+        redeemed[msg.sender] = false;
+        emit RewardRedeemed(msg.sender, amountToRecieve);
     }
 
-    // // Define the function for destroying the contract
-    // function destroy() public {
-    //     require(msg.sender == owner, "Only the contract owner can destroy the contract.");
-    //     selfdestruct(payable(owner));
-    // }
+    /*
+    * @dev: redeem some amount of rewards
+    * @param: amount to be swapped
+    */
 
-
-    // Define the function for exchanging points for ether
-    function swapRewardForEther(uint256 swapAmount) public payable {
-        require(swapAmount > 0, "reward amount must be greater than 0.");
-        require(rewards[msg.sender] >= swapAmount, "You do not have enough points to make this exchange.");
-
-        // Calculate the amount of ether to transfer
-        uint256 etherAmount = swapAmount / exchangeRate;
-
-        require(msg.value >= etherAmount, "Insufficient ether sent.");
+    function redeemSomeRewards(uint256 swapAmount) public payable {
+        // validate amount to be greater than 1
+        require(swapAmount > 0, "zero amount");
+        // validate recycler reward amount is not lower than amount to swap
+        require(rewards[msg.sender] >= swapAmount, "low points");
+        uint256 MaticAmount = swapAmount / exchangeRate;
+        // Calculate the amount of Matic to transfer
+        require(msg.value >= MaticAmount, "Insufficient Matic ");
 
         // Deduct the points from the user's account
         rewards[msg.sender] -= swapAmount;
 
-        // Transfer the ether to the user's wallet
-        (bool success,) = payable(msg.sender).call{value: etherAmount}("");
-        require(success, "Failed to send ether to user.");
-
-        // Record the transaction
-        emit rewardsSwapped(msg.sender, swapAmount, etherAmount);
-
-        // Notify the user that the exchange has been completed
-        // ...
+        // Transfer the Matic to the user's wallet
+        (bool success,) = payable(msg.sender).call{value: MaticAmount}("");
+        require(success, "not sent");
+        emit rewardsSwapped(msg.sender, swapAmount, MaticAmount);
     }
 
-      // Define a function for the owner to update the exchange rate
-    function setExchangeRate(uint256 _exchangeRate) public {
-        //require(msg.sender == owner(), "Only the contract owner can update the exchange rate.");
-        require(_exchangeRate > 0, "Exchange rate must be greater than 0.");
+    /*
+      * @dev: set the exchange rate for swapping rewards for $$
+      * @param: value of rate set as exchange rate
+    */
+    function setExchangeRate(uint256 _exchangeRate) public onlyOwner() {
+        // validate input is not null and amount is greater tha zero
+        require(_exchangeRate > 0 && _exchangeRate != 0, "zero value");
         exchangeRate = _exchangeRate;
     }
 
-    // Define a function for the owner to withdraw ether from the contract
-    function withdrawEther(uint256 amount) public {
-        require(msg.sender == owner, "Only the contract owner can withdraw ether.");
-        require(address(this).balance >= amount, "Insufficient balance in contract.");
-        payable(msg.sender).transfer(amount);
-    }
-
-    // Define a function to get the balance of ether in the contract
+    /*
+    * @dev: get balance of the smart contract
+    */
     function getContractBalance() public view returns (uint256) {
         return address(this).balance;
     }
 
-    // function() payable {}
+    /*
+    * @dev: function to recieve donations for the project
+    * @param: amount to send to smart contract
+    */
+    function donatefunds(uint256 amount) public payable {
+        //validate amount to donate is not 0 and sender has enough balance for transaction
+        require(msg.sender.balance >= amount, "Insufficient funds");
+        payable(address(this)).transfer(amount);
+    }
+
+    /*
+    * @dev: get all items  ever recycled
+    */
+    function recycled_items() public view returns (uint256) {
+        return recycledItems;
+    }
+
+    /*
+    * @dev: get total rewards recieved and current items recycled
+    */
+    function myreward() public view returns (uint256 totalRewards, uint256 currentRecyclingCount){
+        return (rewards[msg.sender], recyclingCounts[msg.sender]);
+    }
+
+    /*
+    * dev: get addres of owner and value of exchange rate
+    */
+    function getSummary() public view returns (address _owner, uint256 _exchangeRate){
+        return (owner, exchangeRate);
+    }
+  
     receive() external payable {}
 }
